@@ -1,0 +1,37 @@
+{
+  "Garage": 
+    {
+      "Name": "Garage 1",
+      "Location": "Location 1",
+      "Levels": [
+        {
+          "Index": 1,
+          "Name": "First",
+          "ParkingSpecification": [
+            {
+              "Type": "Car",
+              "Capacity": 3
+            },
+            {
+              "Type": "Motorbike",
+              "Capacity": "3"
+            }
+          ]
+        },
+        {
+          "Index": 2,
+          "Name": "Second",
+          "ParkingSpecification": [
+            {
+              "Type": "Car",
+              "Capacity": 3
+            },
+            {
+              "Type": "Motorbike",
+              "Capacity": "3"
+            }
+          ]
+        }
+      ]
+    }
+}
