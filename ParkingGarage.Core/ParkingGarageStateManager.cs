@@ -19,16 +19,16 @@ public class ParkingGarageStateManager
     /// such as: invalid operation when try releasing parking lot but there is not any active parking record
     /// </summary>
     private readonly Dictionary<VehicleType, uint> _garageParkingLotDesign = new();
-    private readonly ParkingGarageOptions _options;
     private readonly IParkingRecordRepository _parkingRecordRepository;
+    private readonly IParkingDesignProvider _parkingDesignProvider;
 
     // Used for preventing race condition
     private readonly Mutex _mutex = new();
 
-    public ParkingGarageStateManager(IOptions<ParkingGarageOptions> options, IParkingRecordRepository parkingRecordRepository)
+    public ParkingGarageStateManager(IParkingRecordRepository parkingRecordRepository, IParkingDesignProvider parkingDesignProvider)
     {
-        _options = options.Value;
         _parkingRecordRepository = parkingRecordRepository;
+        _parkingDesignProvider = parkingDesignProvider;
     }
 
     /// <summary>
@@ -50,9 +50,10 @@ public class ParkingGarageStateManager
     /// <summary>
     /// Initialize the garage's capacity
     /// </summary>
-    private void InitializeGarageState()
+    private async Task InitializeGarageState()
     {
-        var specifications = _options.Garage.Levels.SelectMany(l => l.ParkingSpecification)
+        var parkingDesign = await _parkingDesignProvider.GetInitialDesignAsync();
+        var specifications = parkingDesign.Garage.Levels.SelectMany(l => l.ParkingSpecification)
             .ToList();
         foreach (var specification in specifications)
         {

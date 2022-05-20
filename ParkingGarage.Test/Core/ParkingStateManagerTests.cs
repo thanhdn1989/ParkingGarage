@@ -12,15 +12,17 @@ namespace ParkingGarage.Test.Core;
 public class ParkingStateManagerTests
 {
     private readonly Mock<IParkingRecordRepository> _parkingRecordRepository;
+    private readonly Mock<IParkingDesignProvider> _parkingDesignProvider;
 
     public ParkingStateManagerTests()
     {
         _parkingRecordRepository = new Mock<IParkingRecordRepository>();
+        _parkingDesignProvider = new Mock<IParkingDesignProvider>();
     }
 
-    private async Task<ParkingGarageStateManager> CreateSut(IOptions<ParkingGarageOptions> options)
+    private async Task<ParkingGarageStateManager> CreateSut()
     {
-        var sut = new ParkingGarageStateManager(options, _parkingRecordRepository.Object);
+        var sut = new ParkingGarageStateManager(_parkingRecordRepository.Object, _parkingDesignProvider.Object);
         await sut.BootstrapAsync();
         return sut;
     }
@@ -36,9 +38,11 @@ public class ParkingStateManagerTests
             {
                 { VehicleType.Car, 2 }
             });
+        _parkingDesignProvider.Setup(p => p.GetInitialDesignAsync())
+            .ReturnsAsync(config);
 
         // Act
-        var sut = await CreateSut(Options.Create(config));
+        var sut = await CreateSut();
 
         // Verify
         Assert.Throws<BusinessException>(() => sut.FindAndUpdateFreeParkingLot(vehicle.Type));
@@ -56,8 +60,11 @@ public class ParkingStateManagerTests
                 { VehicleType.Car, 1 }
             });
 
+        _parkingDesignProvider.Setup(p => p.GetInitialDesignAsync())
+            .ReturnsAsync(config);
+
         // Act
-        var sut = await CreateSut(Options.Create(config));
+        var sut = await CreateSut();
 
         // Verify
         sut.FindAndUpdateFreeParkingLot(vehicle.Type);
@@ -70,7 +77,10 @@ public class ParkingStateManagerTests
         var config = ParkingGarageConfig.CreateSample(1, 2, 2);
         _parkingRecordRepository.Setup(p => p.CollectAllActiveParkingRecordsAsync())
             .ReturnsAsync(new Dictionary<VehicleType, uint>());
-        var sut = await CreateSut(Options.Create(config));
+        _parkingDesignProvider.Setup(p => p.GetInitialDesignAsync())
+            .ReturnsAsync(config);
+        
+        var sut = await CreateSut();
 
         // Verify
         Assert.Throws<BusinessException>(() => sut.ReleaseParkingLot(VehicleType.Car));
@@ -88,7 +98,9 @@ public class ParkingStateManagerTests
                 { VehicleType.Car, 2 },
                 { VehicleType.Motorbike, 2 }
             });
-        var sut = await CreateSut(Options.Create(config));
+        _parkingDesignProvider.Setup(p => p.GetInitialDesignAsync())
+            .ReturnsAsync(config);
+        var sut = await CreateSut();
 
         // Verify
         sut.ReleaseParkingLot(VehicleType.Car);
